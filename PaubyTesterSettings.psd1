@@ -4,7 +4,7 @@
     RulesUrl = @( 'https://raw.githubusercontent.com/PowerShell/PSScriptAnalyzer/development/Tests/Engine/CommunityAnalyzerRules/CommunityAnalyzerRules.psd1',
                 'https://raw.githubusercontent.com/PowerShell/PSScriptAnalyzer/development/Tests/Engine/CommunityAnalyzerRules/CommunityAnalyzerRules.psm1'
             )
-    RulesBaseDirectory = "Rules"
+    RulesBaseDirectory = "Tests\Rules"
     TestsBaseDirectory = "Tests"
     TestsName = "*.Tests.ps1"
 }

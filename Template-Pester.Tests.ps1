@@ -6,9 +6,6 @@ Describe "Testing Function - $($Function.Name) - Functional Processing & Logic" 
 
             It "Passes testing for invalid parameters" {
             }
-			
-			It "Passes testing for valid parameters" {
-			}
         }
 
         Context "Testing function processing and logic" {

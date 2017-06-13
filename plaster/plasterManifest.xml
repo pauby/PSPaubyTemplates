@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<plasterManifest schemaVersion="1.0" xmlns="http://www.microsoft.com/schemas/PowerShell/Plaster/v1">
+  	<metadata>
+		<name>PSModule</name>
+		<id>903cadc4-91fa-49be-9aa5-c332bf76adf6</id>
+		<version>1.0.0</version>
+		<title>PSModule</title>
+		<description>Plaster template for creating the files for a PowerShell module.</description>
+		<author>Paul Broadwith (https://github.com/pauby)</author>
+		<tags>Module, ModuleManifest, Build</tags>
+	</metadata>
+
+  	<parameters>
+		<parameter 	name='FullName'
+					type='text'
+					prompt='Enter your full name'/>
+		<parameter 	name='ModuleName'
+					type='text'
+					prompt='Enter the name of the module'/>
+		<parameter 	name='ModuleDesc'
+					type='text'
+					prompt='Enter a description for the module'/>
+		<parameter 	name='Version'
+					type='text'
+					default='0.1.0'
+					prompt='Enter the version number for the module'/>
+		<parameter 	name='RequiredModules'
+					type='text'
+					default=''
+					prompt='Enter the name of the modules required for this module, separated by commas'/>
+		<parameter name='Options' type='multichoice' default='0,1,2' store='text' prompt='Select desired options'>
+			<choice label='&amp;Pester test support'
+					help="Adds Tests directory and a starter Pester Tests file."
+					value="Pester"/>
+			<choice label='Create &amp;Module Manifest'
+					help="Creates a PowerShell Module Manifest."
+					value="Manifest"/>
+			<choice label='&amp;Git'
+					help="Adds a .gitignore file."
+					value="Git"/>
+			<choice label='&amp;None'
+					help="No options specified."
+					value="None"/>
+		</parameter>
+		<parameter name='AddTest'
+					type='choice'
+					prompt='Create test dir and add Pester test for module manifest validation:'
+					default='0'
+					store='text'>
+			<choice label='&amp;No'
+					help="Choose not to add Pester test support."
+					value="No"/>
+			<choice label='&amp;Yes'
+					help="Choose to add Pester test support."
+					value="Yes"/>
+		</parameter>
+		<parameter 	name='Editor'
+					type='choice'
+					prompt='Select an editor for editor integration (or None):'
+					default='0'
+					store='text' >
+			<choice label='&amp;None'
+					help="No editor specified."
+					value="None"/>
+			<choice label='Visual Studio &amp;Code'
+					help="Your editor is Visual Studio Code."
+                    value="VSCode"/>
+		</parameter>
+  	</parameters>
+
+  	<content>
+        <message>&#10;&#10;Scaffolding your PowerShell Module...&#10;&#10;&#10;</message>
+		<file 	source=''
+				destination='src\'
+				condition='$PLASTER_PARAM_Options -contains "Structure"'/>
+		<file 	source=''
+				destination='src\public'
+				condition='$PLASTER_PARAM_Options -contains "Pester"'/>
+		<file 	source=''
+				destination='src\private'
+				condition='$PLASTER_PARAM_Options -contains "Pester"'/>
+
+		<file 	source=''
+				destination='test\'
+				condition='$PLASTER_PARAM_Options -contains "Pester"'/>
+		<file 	source=''
+				destination='test\public'
+				condition='$PLASTER_PARAM_Options -contains "Pester"'/>
+		<file 	source=''
+				destination='test\private'
+				condition='$PLASTER_PARAM_Options -contains "Pester"'/>
+
+		<message condition='$PLASTER_PARAM_Options -contains "Manifest"'>Creating Module Manifest for module $PLASTER_PARAM_ModuleName ... </message>
+        <newModuleManifest 	destination='${PLASTER_PARAM_ModuleName}.psd1'
+                           	moduleVersion='$PLASTER_PARAM_Version'
+                           	rootModule='${PLASTER_PARAM_ModuleName}.psm1'
+							author='$PLASTER_PARAM_FullName'
+						   	description='$PLASTER_PARAM_ModuleDesc'
+                           	encoding='UTF8-NoBOM'
+                           	openInEditor="true"/>
+
+        <file source='Module.psm1'
+              destination='${PLASTER_PARAM_ModuleName}.psm1'
+              openInEditor="true"/>
+
+        <templateFile condition="$PLASTER_PARAM_AddTest -eq 'Yes'"
+                      source='${PLASTER_TemplatePath}\Module.T.ps1'
+                      destination='test\${PLASTER_PARAM_ModuleName}.Tests.ps1' />
+
+        <file condition="($PLASTER_PARAM_Editor -eq 'VSCode')"
+              source='editor\VSCode\settings.json'
+              destination='.vscode\settings.json' />
+
+        <file condition="(($PLASTER_PARAM_Editor -eq 'VSCode') -and ($PLASTER_PARAM_AddTest -eq 'Yes'))"
+              source='editor\VSCode\tasks.json'
+              destination='.vscode\tasks.json' />
+
+        <requireModule name="Pester" condition="$PLASTER_PARAM_AddTest -eq 'Yes'" minimumVersion="3.4.0"
+            message="Without Pester, you will not be able to run the provided Pester test to validate your module manifest file.`nWithout version 3.4.0, VS Code will not display Pester warnings and errors in the Problems panel."/>
+
+        <message>
+
+Your new PowerShell module project '$PLASTER_PARAM_ModuleName' has been created.
+
+        </message>
+
+        <message condition="$PLASTER_PARAM_AddTest -eq 'Yes'">
+A Pester test has been created to validate the module's manifest file.  Add additional tests to the test directory.
+You can run the Pester tests in your project by executing the 'test' task.  Press Ctrl+P, then type 'task test'.
+
+        </message>
+</content>
+
+
+
+
+
+
+		<message condition='[bool](Get-Variable -Name PLASTER_PARAM_RequiredModules)'>Adding RequiredModules to manifest $PLASTER_PARAM_ModuleName.psd1</message>
+		<modify path='src\${PLASTER_PARAM_ModuleName}.psd1'
+				condition='$PLASTER_PARAM_Options -contains "Manifest"'>
+				<replace condition='[bool](Get-Variable -Name PLASTER_PARAM_RequiredModules)'>
+					<original>^# RequiredModules = @()</original>
+					<substitute expand='true'>RequiredModules = @($PLASTER_PARAM_RequiredModules)</substitute>
+			</replace>
+		</modify>
+
+		<requireModule 	name="Pester" condition='$PLASTER_PARAM_Options -contains "Pester"'
+						minimumVersion="3.4.0"
+						message="Without Pester, you will not be able to run the provided Pester test to validate your module manifest file.`nWithout version 3.4.0, VS Code will not display Pester warnings and errors in the Problems panel."/>
+  	</content>
+</plasterManifest>
